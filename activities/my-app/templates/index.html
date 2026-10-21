@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p>Welcome to NextUp.</p>
+  <p><a class="button" href="{{ url_for('join') }}">Join the queue</a></p>
+
+  {% for s in services %}
+    {% set court_tickets = tickets | selectattr("service_id", "equalto", s.id) | list %}
+    {% set waiting = court_tickets | selectattr("status", "equalto", "waiting") | list %}
+
+    <section class="court" aria-labelledby="court-{{ s.id }}">
+      <h2 id="court-{{ s.id }}">{{ s.name }}</h2>
+      <p class="court-count">{{ waiting | length }} group(s) waiting</p>
+
+      <ul class="tickets">
+        {% for t in court_tickets %}
+          <li>
+            <a href="{{ url_for('ticket', ticket_id=t.id) }}">#{{ t.number }}</a>
+            {{ t.name }} ({{ t.status }})
+          </li>
+        {% else %}
+          <li>No one is in this queue yet.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+{% endblock %}

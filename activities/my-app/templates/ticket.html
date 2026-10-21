@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service.name }} #{{ ticket.number }} · NextUp{% endblock %}
+
+{% block content %}
+  <h2>{{ service.name }} · Ticket #{{ ticket.number }}</h2>
+  <p>Hi {{ ticket.name }}! Status: <strong>{{ ticket.status }}</strong>.</p>
+  <p>
+    {% if ahead == 0 %}You're next!{% else %}{{ ahead }} group(s) ahead of you on {{ service.name }}.{% endif %}
+  </p>
+  <p><a href="{{ url_for('index') }}">&larr; Back to the queue</a></p>
+{% endblock %}
