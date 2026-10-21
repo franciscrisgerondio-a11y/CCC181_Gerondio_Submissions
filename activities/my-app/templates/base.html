@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}NextUp{% endblock %}</title>
+  <title>{% block title %}PivotPB{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <header>
-    <h1><a href="{{ url_for('index') }}">NextUp</a></h1>
+    <h1><a href="{{ url_for('index') }}">PivotPB</a></h1>
     <p class="tagline">Fair pickleball court queues for players and organizers</p>
   </header>
 
@@ -16,7 +16,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer>NextUp</footer>
+  <footer>PivotPB</footer>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
