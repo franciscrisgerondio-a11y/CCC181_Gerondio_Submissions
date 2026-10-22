@@ -108,7 +108,9 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   color: var(--ink);
 }
 
-.lead-muted { font-size: 1.15rem; color: var(--muted); max-width: 34ch; }
+.display-title-sm { font-size: clamp(2.4rem, 6vw, 4rem); }
+
+.lead-muted { font-size: 1.15rem; color: var(--muted); max-width: 40ch; }
 .text-muted-pb { color: var(--muted); }
 
 .stat { display: flex; flex-direction: column; }
@@ -138,14 +140,15 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 }
 
 /* ---------- form controls ---------- */
-.form-control {
+.form-control, .form-select {
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: #fff;
-  padding: 0.85rem 1rem;
+  background-color: #fff;
 }
 
-.form-control:focus {
+.form-control { padding: 0.85rem 1rem; }
+
+.form-control:focus, .form-select:focus {
   border-color: var(--green);
   box-shadow: 0 0 0 0.2rem rgba(20, 102, 80, 0.2);
 }
@@ -154,7 +157,7 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 .court-name { font-weight: 800; }
 .court-wait { font-size: 0.85rem; color: var(--muted); }
 
-/* ---------- court dropdown ---------- */
+/* ---------- court dropdown (join form) ---------- */
 .court-select { position: relative; }
 
 .court-toggle {
@@ -252,6 +255,23 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   padding-bottom: 0.9rem;
 }
 
+.btn-ink {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--ink);
+  --bs-btn-border-color: var(--ink);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #0A1914;
+  --bs-btn-hover-border-color: #0A1914;
+  --bs-btn-active-bg: #050E0B;
+  --bs-btn-active-border-color: #050E0B;
+  --bs-btn-disabled-color: #7C8A83;
+  --bs-btn-disabled-bg: #DDE3DD;
+  --bs-btn-disabled-border-color: #DDE3DD;
+  --bs-btn-focus-shadow-rgb: 16, 38, 31;
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
 .btn-ghost {
   background: #fff;
   border: 1px solid var(--line);
@@ -268,13 +288,14 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 
 /* ---------- My place ---------- */
 .ticket-number {
-  font-size: clamp(5rem, 16vw, 7.5rem);
+  font-size: clamp(3.4rem, 12vw, 5.5rem);
   font-weight: 800;
   line-height: 0.95;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
 }
 
-.ticket-hash { color: var(--green); font-size: 0.7em; margin-right: 0.05em; }
+.ticket-prefix { color: var(--green); }
 
 .court-chip {
   display: flex;
@@ -327,4 +348,88 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 .pill-waiting { background: #FDEFD0; color: #6B4200; }
 .pill-called { background: var(--ink); color: #fff; }
 .pill-served { background: var(--lime-soft); color: var(--green-dark); }
-.pill-no-show { background: #ECE9E1; color: #4A4840; }
+.pill-no-show, .pill-left { background: #ECE9E1; color: #4A4840; }
+
+/* ---------- staff dashboard ---------- */
+.filter-form { min-width: 220px; }
+
+.count-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  overflow: hidden;
+}
+
+.count-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  font-weight: 700;
+}
+
+.count-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.count-cell strong {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.court-card { overflow: hidden; }
+
+.court-card-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: #E7ECE6;
+}
+
+.court-card-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+
+.queue-table { --bs-table-bg: transparent; --bs-table-border-color: var(--line); }
+.queue-table td { padding: 1rem 1.5rem; }
+.queue-table tbody tr:last-child td { border-bottom: 0; }
+
+.queue-table .btn {
+  min-height: 44px;
+  padding: 0.55rem 1.15rem;
+}
+
+.num-chip {
+  display: inline-block;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  background: var(--lime-soft);
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.75rem 1.5rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state::before {
+  content: "";
+  flex-shrink: 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1.5px dashed var(--muted);
+  border-radius: 50%;
+}

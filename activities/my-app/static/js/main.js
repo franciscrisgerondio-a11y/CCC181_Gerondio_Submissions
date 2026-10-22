@@ -1,4 +1,4 @@
-// Court dropdown: put the chosen court into the hidden field and the toggle label.
+// Court dropdown on the join form: put the chosen court into the hidden field and the toggle label.
 function el(tag, className, text) {
   const node = document.createElement(tag);
   node.className = className;
@@ -26,4 +26,9 @@ document.querySelectorAll(".court-select").forEach((root) => {
       toggle.classList.remove("is-invalid");
     });
   });
+});
+
+// Staff court filter: submit as soon as a court is chosen.
+document.querySelectorAll("[data-autosubmit]").forEach((select) => {
+  select.addEventListener("change", () => select.form.submit());
 });

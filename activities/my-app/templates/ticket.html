@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Ticket #{{ ticket.number }} · PivotPB{% endblock %}
+{% block title %}Ticket {{ ticket|ticket_code }} · PivotPB{% endblock %}
 
 {% block content %}
 <div class="row g-4 g-lg-5 align-items-center">
@@ -21,8 +21,8 @@
         <p class="eyebrow mb-0">Joined {{ ticket.joined_at }}</p>
       </div>
 
-      <p class="ticket-number mb-3" aria-label="Ticket number {{ ticket.number }}">
-        <span class="ticket-hash" aria-hidden="true">#</span>{{ ticket.number }}
+      <p class="ticket-number mb-3" aria-label="Ticket {{ ticket|ticket_code }}">
+        <span class="ticket-prefix" aria-hidden="true">C{{ ticket.service_id }}-</span><span aria-hidden="true">{{ '%03d'|format(ticket.number) }}</span>
       </p>
 
       <div class="court-chip mb-4">

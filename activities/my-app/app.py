@@ -16,20 +16,41 @@ STATUS_LABELS = {"waiting": "Waiting", "called": "Called", "served": "Served",
                  "no-show": "No show", "left": "Left"}
 
 # id is unique forever and is used in URLs.
-# number is shown to players, continuous across courts, and reused when the
-# last person in line leaves.
+# number counts within one court, so every court has its own 001, 002, ...
+# The ticket code shown to people is C<court id>-<number>, for example C1-011.
 # status is one of: waiting, called, served, no-show, left
 TICKETS = [
-    {"id": 12, "number": 12, "name": "Ana", "email": "ana@school.edu",
+    {"id": 1, "number": 11, "name": "Ana", "email": "ana@school.edu",
      "service_id": 1, "players": 2, "status": "called", "joined_at": "10:20 AM"},
-    {"id": 13, "number": 13, "name": "Carla", "email": "carla@school.edu",
+    {"id": 2, "number": 12, "name": "Carla", "email": "carla@school.edu",
      "service_id": 1, "players": 4, "status": "waiting", "joined_at": "10:30 AM"},
-    {"id": 14, "number": 14, "name": "Ben", "email": "ben@school.edu",
+    {"id": 3, "number": 1, "name": "Ben", "email": "ben@school.edu",
      "service_id": 2, "players": 2, "status": "waiting", "joined_at": "10:42 AM"},
 ]
 
+# action -> (statuses it is allowed from, new status)
+ACTIONS = {
+    "call": ({"waiting"}, "called"),
+    "serve": ({"called"}, "served"),
+    "no-show": ({"waiting", "called"}, "no-show"),
+}
+
 
 # ---------- helpers ----------
+
+def ticket_code(t):
+    return f"C{t['service_id']}-{t['number']:03d}"
+
+
+@app.template_filter("ticket_code")
+def ticket_code_filter(t):
+    return ticket_code(t)
+
+
+@app.template_filter("status_label")
+def status_label(status):
+    return STATUS_LABELS.get(status, status)
+
 
 def find_ticket(ticket_id):
     return next((t for t in TICKETS if t["id"] == ticket_id), None)
@@ -40,8 +61,9 @@ def find_service(service_id):
 
 
 def waiting_in(service_id):
-    return [t for t in TICKETS
-            if t["service_id"] == service_id and t["status"] == "waiting"]
+    return sorted((t for t in TICKETS
+                   if t["service_id"] == service_id and t["status"] == "waiting"),
+                  key=lambda t: t["number"])
 
 
 def services_with_counts():
@@ -88,6 +110,11 @@ def describe(t):
             "ahead": ahead, "position": position, "headline": headline,
             "subline": subline, "banner": banner,
             "can_leave": status in ("waiting", "called")}
+
+
+def back_to_dashboard():
+    return redirect(url_for("staff_dashboard",
+                            service_id=request.form.get("filter", type=int)))
 
 
 @app.context_processor
@@ -137,17 +164,19 @@ def join():
 
     # The id never repeats, so every ticket link stays unique.
     new_id = max((t["id"] for t in TICKETS), default=0) + 1
-    # The number continues from the highest number still in play. People who
-    # left no longer count, so their number is reused only if they were last.
-    number = max((t["number"] for t in TICKETS if t["status"] != "left"),
+    # The number continues inside this court only. People who left no longer
+    # count, so their number is reused only if they were last in that court.
+    number = max((t["number"] for t in TICKETS
+                  if t["service_id"] == service_id and t["status"] != "left"),
                  default=0) + 1
 
-    TICKETS.append({"id": new_id, "number": number, "name": name, "email": "",
-                    "service_id": service_id, "players": players,
-                    "status": "waiting",
-                    "joined_at": datetime.now().strftime("%I:%M %p").lstrip("0")})
+    new_ticket = {"id": new_id, "number": number, "name": name, "email": "",
+                  "service_id": service_id, "players": players,
+                  "status": "waiting",
+                  "joined_at": datetime.now().strftime("%I:%M %p").lstrip("0")}
+    TICKETS.append(new_ticket)
     session["ticket_id"] = new_id
-    flash(f"You joined the queue. Your ticket is #{number}.", "success")
+    flash(f"You joined the queue. Your ticket is {ticket_code(new_ticket)}.", "success")
     return redirect(url_for("ticket", ticket_id=new_id))
 
 
@@ -175,11 +204,54 @@ def leave(ticket_id):
     return redirect(url_for("index"))
 
 
-# ---------- staff (built in Part 7) ----------
+# ---------- staff routes (login comes in a later week) ----------
 
-@app.route("/staff")
+@app.get("/staff")
 def staff_dashboard():
-    return "Staff dashboard coming soon"
+    selected = request.args.get("service_id", type=int)
+    if selected not in [s["id"] for s in SERVICES]:
+        selected = None
+
+    all_courts = []
+    for s in SERVICES:
+        queue = sorted((t for t in TICKETS
+                        if t["service_id"] == s["id"]
+                        and t["status"] in ("waiting", "called")),
+                       key=lambda t: t["number"])
+        all_courts.append({"service": s, "tickets": queue,
+                           "waiting": sum(1 for t in queue if t["status"] == "waiting")})
+    shown = [c for c in all_courts if selected in (None, c["service"]["id"])]
+    return render_template("staff.html", all_courts=all_courts, shown=shown,
+                           services=SERVICES, selected=selected)
+
+
+@app.post("/staff/tickets/<int:ticket_id>/<action>")
+def staff_action(ticket_id, action):
+    t = find_ticket(ticket_id)
+    if t is None or action not in ACTIONS:
+        abort(404)
+    allowed_from, new_status = ACTIONS[action]
+    if t["status"] not in allowed_from:
+        flash(f"{ticket_code(t)} is {STATUS_LABELS[t['status']].lower()}, "
+              f"so that action is not available.", "warning")
+        return back_to_dashboard()
+    t["status"] = new_status
+    flash(f"{ticket_code(t)} ({t['name']}) marked {STATUS_LABELS[new_status].lower()}.", "info")
+    return back_to_dashboard()
+
+
+@app.post("/staff/courts/<int:service_id>/call-next")
+def staff_call_next(service_id):
+    if service_id not in [s["id"] for s in SERVICES]:
+        abort(404)
+    queue = waiting_in(service_id)
+    court = find_service(service_id)["name"]
+    if not queue:
+        flash(f"No one is waiting on {court}.", "warning")
+    else:
+        queue[0]["status"] = "called"
+        flash(f"Called {ticket_code(queue[0])} ({queue[0]['name']}) on {court}.", "success")
+    return back_to_dashboard()
 
 
 if __name__ == "__main__":
