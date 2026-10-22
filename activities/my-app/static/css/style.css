@@ -109,6 +109,7 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 }
 
 .lead-muted { font-size: 1.15rem; color: var(--muted); max-width: 34ch; }
+.text-muted-pb { color: var(--muted); }
 
 .stat { display: flex; flex-direction: column; }
 .stat-number { font-size: 2rem; font-weight: 800; line-height: 1; }
@@ -250,3 +251,80 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   padding-top: 0.9rem;
   padding-bottom: 0.9rem;
 }
+
+.btn-ghost {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+.btn-ghost:hover, .btn-ghost:focus-visible {
+  background: #fff;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ---------- My place ---------- */
+.ticket-number {
+  font-size: clamp(5rem, 16vw, 7.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.ticket-hash { color: var(--green); font-size: 0.7em; margin-right: 0.05em; }
+
+.court-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem;
+  background: #E7ECE6;
+  border-radius: 20px;
+}
+
+.court-chip-label { color: var(--green-dark); }
+.court-chip-number { font-size: 1.6rem; font-weight: 800; }
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.position-text {
+  font-size: clamp(1.5rem, 4vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.called-banner {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.called-banner[hidden] { display: none; }
+
+/* ---------- status pills (words always shown, not only color) ---------- */
+.pill {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pill-waiting { background: #FDEFD0; color: #6B4200; }
+.pill-called { background: var(--ink); color: #fff; }
+.pill-served { background: var(--lime-soft); color: var(--green-dark); }
+.pill-no-show { background: #ECE9E1; color: #4A4840; }
