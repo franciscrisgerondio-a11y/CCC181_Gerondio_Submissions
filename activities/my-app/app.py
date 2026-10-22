@@ -11,9 +11,9 @@ SERVICES = [
 TICKETS = [
     {"id": 1, "number": 1, "name": "Ana", "email": "ana@school.edu",
      "service_id": 1, "players": 2, "status": "waiting"},
-    {"id": 2, "number": 1, "name": "Ben", "email": "ben@school.edu",
+    {"id": 2, "number": 2, "name": "Ben", "email": "ben@school.edu",
      "service_id": 2, "players": 2, "status": "waiting"},
-    {"id": 3, "number": 2, "name": "Carla", "email": "carla@school.edu",
+    {"id": 3, "number": 3, "name": "Carla", "email": "carla@school.edu",
      "service_id": 1, "players": 4, "status": "waiting"},
 ]
 
@@ -49,8 +49,7 @@ def join():
                                    error="Please choose a court."), 400
 
         new_id = max((t["id"] for t in TICKETS), default=0) + 1
-        number = max((t["number"] for t in TICKETS if t["service_id"] == service_id),
-                     default=0) + 1
+        number = new_id
         TICKETS.append({"id": new_id, "number": number, "name": name, "email": "",
                         "service_id": service_id, "players": 1, "status": "waiting"})
         return redirect(url_for("ticket", ticket_id=new_id))
