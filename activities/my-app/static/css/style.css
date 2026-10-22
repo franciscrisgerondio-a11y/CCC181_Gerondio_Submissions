@@ -433,3 +433,19 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   border: 1.5px dashed var(--muted);
   border-radius: 50%;
 }
+
+/* ---------- accessibility fixes (Part 9) ---------- */
+.btn:focus-visible,
+.nav-link:focus-visible,
+.navbar-toggler:focus-visible,
+.btn-size:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+.dropdown-item:focus-visible { outline: 3px solid var(--green); outline-offset: -3px; }
+
+.pill-nav .nav-link { padding-top: 0.65rem; padding-bottom: 0.65rem; }
+.navbar-toggler { min-width: 44px; min-height: 44px; }
+.invalid-feedback { color: #B02A37; }
