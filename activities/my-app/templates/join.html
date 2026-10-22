@@ -1,28 +1,118 @@
 {% extends "base.html" %}
-
 {% block title %}Join the queue · PivotPB{% endblock %}
 
 {% block content %}
-  <h2>Join the queue</h2>
+<div class="row g-4 g-lg-5 align-items-center">
 
-  {% if error %}
-    <p class="error">{{ error }}</p>
-  {% endif %}
+  <div class="col-12 col-lg-6">
+    <h1 class="display-title">More play.<br>Less waiting.</h1>
+    <p class="lead-muted mt-4 mb-4">
+      Pick a court, get your place, and we'll make sure you know exactly when it's your turn.
+    </p>
+    <p class="stat mb-0">
+      <span class="stat-number">{{ waiting_total }}</span>
+      <span class="stat-label">{{ 'group' if waiting_total == 1 else 'groups' }} waiting</span>
+    </p>
+  </div>
 
-  <form method="post" class="join-form">
-    <label for="name">Your name</label>
-    <input id="name" name="name" type="text" autofocus>
+  <div class="col-12 col-lg-6">
+    <section class="card-pb p-4 p-md-5" aria-labelledby="join-heading">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="step-badge" aria-hidden="true">01</span>
+        <div>
+          <p class="eyebrow mb-1">Player entry</p>
+          <h2 id="join-heading" class="card-title-pb mb-0">Join the queue</h2>
+        </div>
+      </div>
 
-    <label for="service_id">Court</label>
-    <select id="service_id" name="service_id">
-      <option value="">Choose a court…</option>
-      {% for s in services %}
-        <option value="{{ s.id }}">{{ s.name }}</option>
-      {% endfor %}
-    </select>
+      <form method="post" action="{{ url_for('join') }}" novalidate id="join-form">
 
-    <button type="submit">Get a ticket</button>
-  </form>
+        <div class="mb-4">
+          <label for="name" class="eyebrow d-block mb-2">Your name</label>
+          <input id="name" name="name" type="text" autocomplete="name" required
+                 maxlength="60" placeholder="Enter your name"
+                 class="form-control form-control-lg {% if errors.name %}is-invalid{% endif %}"
+                 value="{{ form.get('name', '') }}"
+                 {% if errors.name %}aria-describedby="name-error"{% endif %}>
+          {% if errors.name %}
+            <div id="name-error" class="invalid-feedback">{{ errors.name }}</div>
+          {% endif %}
+        </div>
 
-  <p><a href="{{ url_for('index') }}">&larr; Back to the queue</a></p>
+        <div class="mb-4">
+          <span id="court-label" class="eyebrow d-block mb-2">Choose a court</span>
+
+          {% set ns = namespace(selected=none) %}
+          {% for s in services %}
+            {% if form.get('service_id') == s.id|string %}{% set ns.selected = s %}{% endif %}
+          {% endfor %}
+
+          <div class="dropdown court-select">
+            <input type="hidden" name="service_id" value="{{ form.get('service_id', '') }}">
+
+            <button type="button" id="court-toggle"
+                    class="court-toggle {% if errors.service_id %}is-invalid{% endif %}"
+                    data-bs-toggle="dropdown" aria-expanded="false"
+                    aria-labelledby="court-label court-current"
+                    {% if errors.service_id %}aria-describedby="service-error"{% endif %}>
+              <span id="court-current" class="court-current">
+                {% if ns.selected %}
+                  <span class="court-name">{{ ns.selected.name }}</span>
+                  <span class="court-wait">{{ ns.selected.waiting }} {{ 'group' if ns.selected.waiting == 1 else 'groups' }} waiting</span>
+                {% else %}
+                  <span class="court-placeholder">Select a court…</span>
+                {% endif %}
+              </span>
+              <svg class="court-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+
+            <ul class="dropdown-menu court-menu">
+              {% for s in services %}
+                {% set wait_text = s.waiting ~ (' group' if s.waiting == 1 else ' groups') ~ ' waiting' %}
+                <li>
+                  <button type="button"
+                          class="dropdown-item court-item {% if ns.selected and ns.selected.id == s.id %}active{% endif %}"
+                          data-value="{{ s.id }}" data-name="{{ s.name }}" data-wait="{{ wait_text }}"
+                          aria-current="{{ 'true' if ns.selected and ns.selected.id == s.id else 'false' }}">
+                    <span class="court-index" aria-hidden="true">0{{ s.id }}</span>
+                    <span class="court-name">{{ s.name }}</span>
+                    <span class="court-wait">{{ wait_text }}</span>
+                    <span class="court-radio" aria-hidden="true"></span>
+                  </button>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          {% if errors.service_id %}
+            <div id="service-error" class="invalid-feedback d-block">{{ errors.service_id }}</div>
+          {% endif %}
+        </div>
+
+        <fieldset class="mb-4" {% if errors.players %}aria-describedby="players-error"{% endif %}>
+          <legend class="eyebrow mb-2 float-none w-auto">Players in your group</legend>
+          <div class="size-options">
+            {% for n in [2, 4] %}
+              <input type="radio" class="btn-check" name="players" id="players-{{ n }}"
+                     value="{{ n }}" required
+                     {% if form.get('players') == n|string %}checked{% endif %}>
+              <label class="btn btn-size" for="players-{{ n }}">{{ n }}</label>
+            {% endfor %}
+          </div>
+          {% if errors.players %}
+            <div id="players-error" class="invalid-feedback d-block">{{ errors.players }}</div>
+          {% endif %}
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100">
+          Get a ticket <span aria-hidden="true">→</span>
+        </button>
+      </form>
+    </section>
+  </div>
+
+</div>
 {% endblock %}
