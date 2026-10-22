@@ -190,6 +190,15 @@ def ticket(ticket_id):
                            view=describe(t))
 
 
+@app.get("/queue/<int:ticket_id>/status.json")
+def ticket_status(ticket_id):
+    """Small JSON route that My place polls. Week 6 turns this into a REST API."""
+    t = find_ticket(ticket_id)
+    if t is None:
+        abort(404)
+    return describe(t)
+
+
 @app.post("/queue/<int:ticket_id>/leave")
 def leave(ticket_id):
     t = find_ticket(ticket_id)
