@@ -4,9 +4,9 @@
 
 | Screen | Before | After | Main issues fixed |
 | --- | --- | --- | --- |
-| Join | ![Join Lighthouse score](screenshots/lighthouse-join.png) | ![Join Lighthouse score](screenshots/lighthouse-join.png) | No Issue |
-| My place | ![My place Lighthouse score](screenshots/lighthouse-myplace.png) | ![My place Lighthouse score](screenshots/lighthouse-myplace.png) | No Issue |
-| Staff dashboard | ![Staff Lighthouse score](screenshots/lighthouse-staff.png) | ![Staff Lighthouse score](screenshots/lighthouse-staff.png) | No Issue |
+| Join | ![Join Lighthouse score](screenshots/lighthouse-join.png)(screenshots/lighthouse-join-1.png) | ![Join Lighthouse score](screenshots/lighthouse-join.png)(screenshots/lighthouse-join-1.png) | No Issue |
+| My place | ![My place Lighthouse score](screenshots/lighthouse-myplace.png)(screenshots/lighthouse-myplace-1.png) | ![My place Lighthouse score](screenshots/lighthouse-myplace.png)(screenshots/lighthouse-myplace-1.png) | No Issue |
+| Staff dashboard | ![Staff Lighthouse score](screenshots/lighthouse-staff.png)(screenshots/lighthouse-staff-1.png) | ![Staff Lighthouse score](screenshots/lighthouse-staff.png)(screenshots/lighthouse-staff-1.png) | No Issue |
 
 Anything still below 90 and why: None
 
