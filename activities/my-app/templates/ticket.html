@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Ticket {{ ticket|ticket_code }} · PivotPB{% endblock %}
+
+{% block content %}
+<div class="row g-4 g-lg-5 align-items-center">
+
+  <div class="col-12 col-lg-6">
+    <p class="eyebrow mb-3">Your queue status</p>
+    <h1 class="display-title" id="headline">{{ view.headline }}</h1>
+    <p class="lead-muted mt-4 mb-0" id="subline">{{ view.subline }}</p>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <section class="card-pb p-4 p-md-5" aria-label="Your ticket">
+
+      <div id="called-banner" class="called-banner" role="status"
+           {% if not view.banner %}hidden{% endif %}>{{ view.banner }}</div>
+
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <p class="eyebrow mb-0">Your ticket</p>
+        <p class="eyebrow mb-0">Joined {{ ticket.joined_at }}</p>
+      </div>
+
+      <p class="ticket-number mb-3">
+        <span class="visually-hidden">Ticket </span><span class="ticket-prefix">C{{ ticket.service_id }}-</span>{{ '%03d'|format(ticket.number) }}
+      </p>
+
+      <div class="court-chip mb-4">
+        <svg viewBox="0 0 52 52" width="52" height="52" aria-hidden="true">
+          <rect width="52" height="52" rx="14" fill="#146650"/>
+          <rect x="12" y="17" width="12" height="18" rx="1.5" fill="none" stroke="#D9F99D" stroke-width="2"/>
+          <rect x="28" y="17" width="12" height="18" rx="1.5" fill="none" stroke="#D9F99D" stroke-width="2"/>
+        </svg>
+        <span class="court-chip-label">Court</span>
+        <span class="court-chip-number">{{ service.name.split(' ')[-1] }}</span>
+      </div>
+
+      <div id="live-status" aria-live="polite">
+        <div class="status-row">
+          <span class="text-muted-pb">Status</span>
+          <span id="status-pill" class="pill pill-{{ view.status }}">{{ view.status_label }}</span>
+        </div>
+        <p id="position-text" class="position-text text-center mt-4 mb-1">{{ view.position }}</p>
+      </div>
+
+      <p class="text-center text-muted-pb small mb-4">
+        This page updates by itself. Status is always shown in words, not only color.
+      </p>
+
+      {% if is_owner %}
+        <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.id) }}"
+              {% if not view.can_leave %}hidden{% endif %}>
+          <button type="submit" class="btn btn-ink w-100">Leave the queue</button>
+        </form>
+      {% endif %}
+    </section>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.id) }}";
+  const finalStatuses = ["served", "no-show", "left"];
+  let timer = null;
+
+  async function refreshStatus() {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(statusUrl, { headers: { "Accept": "application/json" } });
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const pill = document.getElementById("status-pill");
+      pill.textContent = data.status_label;
+      pill.className = "pill pill-" + data.status;
+
+      document.getElementById("position-text").textContent = data.position;
+      document.getElementById("headline").textContent = data.headline;
+      document.getElementById("subline").textContent = data.subline;
+
+      const banner = document.getElementById("called-banner");
+      banner.textContent = data.banner;
+      banner.hidden = !data.banner;
+
+      const leaveForm = document.getElementById("leave-form");
+      if (leaveForm) leaveForm.hidden = !data.can_leave;
+
+      // Nothing else can change once the ticket is finished, so stop asking.
+      if (finalStatuses.includes(data.status) && timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    } catch (err) {
+      console.warn("Could not refresh status", err);
+    }
+  }
+
+  if (!finalStatuses.includes("{{ view.status }}")) {
+    timer = setInterval(refreshStatus, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && timer) refreshStatus();
+    });
+  }
+</script>
+{% endblock %}

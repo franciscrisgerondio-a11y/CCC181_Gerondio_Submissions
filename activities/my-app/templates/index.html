@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="text-center py-5">
+    <h1 class="display-5 fw-bold">PivotPB</h1>
+    <p class="lead mb-4">Join the queue for a pickleball court and see your place in line, with no paddle stacks to watch.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('join_form') }}">Join the queue</a>
+  </div>
+{% endblock %}
