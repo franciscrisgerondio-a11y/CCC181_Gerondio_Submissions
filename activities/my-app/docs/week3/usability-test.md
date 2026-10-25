@@ -5,7 +5,7 @@
 * Who they are: Dothy
 * Which persona they match: Jerich (player) and Lara (organizer) --> Tested both functions
 * Is this a pickleball player or organizer: No, but frequently joins her friends in going to pickleball tournaments.
-* Date, device and place of the test: 3 pm, October 23, 2026, Core Group Office, IPDM
+* Date, device and place of the test: 3 pm, October 24, 2026, Core Group Office, IPDM
 * How I ran it: In person
 * Permission to record asked: Yes
 
