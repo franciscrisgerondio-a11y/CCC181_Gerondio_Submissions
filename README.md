@@ -1,134 +1,70 @@
-# ClinicQ: Hello, Flask
+# PivotPB
 
-Starter Flask app for **CCC181 Week 2: Git, GitHub & Flask Foundations**.
-It shows the project structure, routes, templates and static files from the slides.
+PivotPB is a queue system for pickleball open play on campus courts. Players join the line for a court and see their ticket, status and place in the line on their phone, while game organizers call, serve or mark groups as no show from a dashboard. It replaces the paddle stack, where the player whose paddle sits deepest in the pile plays next and nobody can see the real order. Built for CCC181 Week 3 with Flask, Jinja and Bootstrap 5.
+
+## What it does
+
+* **Join** (`/join`): a player enters a name, picks a court that shows how many groups are waiting, and chooses a group of 2 or 4. The server checks every field and keeps what was typed when something is wrong.
+* **My place** (`/queue/<id>`): shows the ticket code, court, status and how many groups are ahead. It refreshes every 5 seconds and shows a message box when the ticket is called.
+* **Your tickets**: every page lists all of a player's active tickets, and an alert appears on any page when one of them is called.
+* **Staff dashboard** (`/staff`): shows the waiting count for each court, one queue per court in order, a Call next button for each court, and Call, Serve and No show buttons on each row. It refreshes every 5 seconds.
+
+Tickets use the code `C<court>-<number>`, for example `C2-001`. Each court has its own numbering, so several courts can each have a `001`.
+
+## Run it
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # macOS/Linux
+pip install -r requirements.txt
+flask --app app run --debug
+```
+
+Open http://127.0.0.1:5000. To try it on a phone, run `flask --app app run --debug --host 0.0.0.0` and visit your laptop's IP address on the same Wi‑Fi.
+
+## Things to know
+
+* **The staff dashboard has no login yet.** Anyone who opens `/staff` can call, serve or remove tickets. Staff login comes in a later week.
+* **Data lives in memory.** Tickets are kept in a Python list, so the queue starts empty and resets whenever the server restarts. Week 4 moves it into PostgreSQL.
+* **The secret key is a development value.** Week 11 moves it into an environment variable.
+* **Each browser keeps its own tickets.** A player can hold one active ticket per court, and only the browser that joined can leave that ticket.
 
 ## Project structure
 
 ```
-my-app/
-├── app.py              # creates the app and defines routes
-├── requirements.txt    # packages to rebuild the environment
-├── .gitignore          # keeps .venv, caches and secrets out of Git
-├── .venv/              # your virtual environment (not committed)
-├── templates/          # Jinja2 HTML files for render_template()
-│   ├── base.html       # shared layout
-│   ├── index.html      # home page
-│   └── ticket.html     # page for /queue/<ticket_id>
-└── static/             # served at /static/...
-    ├── css/style.css
-    └── js/main.js
+app.py                  # routes, queue rules and validation
+requirements.txt        # packages to rebuild the environment
+templates/
+    base.html           # shared layout, navigation and flash messages
+    index.html          # home page
+    join.html           # join form
+    ticket.html         # My place
+    staff.html          # staff dashboard page
+    _my_tickets.html    # Your tickets strip and called alert (refreshed live)
+    _staff_live.html    # staff counts and queues (refreshed live)
+static/
+    css/style.css       # PivotPB design
+    js/main.js          # court dropdown, double submit guard, live refresh
+docs/week3/             # personas, wireframes, self review, accessibility, usability test, report
 ```
 
 ## Routes
 
-| URL | View function | What you see |
-|---|---|---|
-| `/` | `index()` | "Hello, Ana!" and a list of tickets, rendered with `index.html` |
-| `/queue/<int:ticket_id>` | `ticket()` | A page for that ticket, e.g. `/queue/12` |
-| `/hello` | `hello()` | The plain text "Hello, CCC181!" |
+| URL | Method | What it does |
+| --- | --- | --- |
+| `/` | GET | Home page |
+| `/join` | GET, POST | Show the join form, create a ticket |
+| `/queue/<id>` | GET | My place for one ticket |
+| `/queue/<id>/status.json` | GET | Status and position, polled by My place |
+| `/queue/<id>/leave` | POST | Leave the queue (owner only) |
+| `/api/courts` | GET | Waiting count for each court |
+| `/partials/my-tickets` | GET | HTML for the Your tickets strip |
+| `/staff` | GET | Staff dashboard |
+| `/staff/live` | GET | HTML for the dashboard, polled every 5 seconds |
+| `/staff/tickets/<id>/<action>` | POST | Call, serve or no show for one ticket |
+| `/staff/courts/<id>/call-next` | POST | Call the next waiting group on a court |
 
-Try `/queue/abc`: the `int` converter only accepts numbers, so Flask returns 404.
+## Week 3 documents
 
-## 1. Set up the Python environment
-
-```bash
-# create (once per project)
-python -m venv .venv
-
-# activate (every new terminal)
-.venv\Scripts\activate          # Windows
-source .venv/bin/activate       # macOS/Linux
-
-# install the packages
-pip install -r requirements.txt
-```
-
-Your prompt shows `(.venv)` when the environment is active. Some systems use `python3` or `py` instead of `python`.
-If PowerShell blocks the activate script, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Command Prompt.
-
-If you add more packages later, record them with:
-
-```bash
-pip freeze > requirements.txt
-```
-
-## 2. Run the app
-
-```bash
-flask --app app run --debug
-```
-
-Open http://127.0.0.1:5000. With `--debug`, the server reloads every time you save a file. Never use debug mode in production.
-
-## 3. Put it on GitHub
-
-### Once per computer
-
-```bash
-git config --global user.name "Your Name"
-git config --global user.email you@g.msuiit.edu.ph   # same email as your GitHub account
-git config --list
-```
-
-### Create the local repository and first commit
-
-```bash
-git init
-git branch -M main
-git status              # .venv should NOT appear, thanks to .gitignore
-git add .
-git commit -m "Add Flask starter app"
-```
-
-### Connect to GitHub and push
-
-1. On GitHub, create a new **empty** repository (no README, no .gitignore).
-2. Copy its URL, then:
-
-```bash
-git remote add origin <repo-url>
-git push -u origin main
-```
-
-GitHub does not accept your account password for Git over HTTPS. Sign in through Git Credential Manager or the GitHub CLI, or use a personal access token or SSH key.
-
-### Everyday loop
-
-```bash
-git pull origin main     # before you start working
-git status
-git add <file>
-git commit -m "Add join-queue form"
-git push origin main     # when you have commits to share
-```
-
-## 4. Lab: ship it through a pull request
-
-1. On GitHub, open an issue: **"Set up Flask starter app"**.
-2. Pull the latest `main`, then create a branch:
-   ```bash
-   git switch main
-   git pull origin main
-   git switch -c feature/flask-setup
-   ```
-3. Create `.venv`, install Flask, write `requirements.txt` and `.gitignore`.
-4. Build `app.py` with a home route and one dynamic route, rendered with `base.html` and `index.html`.
-5. Commit in small steps, then push the branch:
-   ```bash
-   git push -u origin feature/flask-setup
-   ```
-6. On GitHub, click **Compare & pull request** and write `Closes #N` in the description (N is your issue number). Merge it, then:
-   ```bash
-   git switch main
-   git pull origin main
-   ```
-
-**Early finishers:** add another static CSS rule linked with `url_for`, or a third route based on one Must feature from your project milestone.
-
-## Commit message tips
-
-- Short summary in the imperative: "Add...", "Fix..."
-- One logical change per commit
-- Commit early and often
-- Good: "Add join-queue form". Unhelpful: "update", "asdf", "final na talaga".
+Personas, wireframes, self review, accessibility results, the usability test and the report are in `docs/week3/`. The report is `docs/week3/report.md`.
