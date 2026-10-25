@@ -1,0 +1,29 @@
+{% set called_elsewhere = my_active | selectattr("status", "equalto", "called")
+                                    | rejectattr("id", "equalto", current_ticket_id) | list %}
+{% for t in called_elsewhere %}
+  <div class="called-alert-wrap">
+    <a class="called-alert" href="{{ t.url }}">
+      <span>{{ t.code }} is called. Go to {{ t.court }} now.</span>
+      <span class="called-alert-cta">View ticket <span aria-hidden="true">→</span></span>
+    </a>
+  </div>
+{% endfor %}
+
+{% if my_active and not (my_active|length == 1 and my_active[0].id == current_ticket_id) %}
+  <nav class="my-tickets" aria-label="Your tickets">
+    <p class="eyebrow mb-0">Your tickets</p>
+    <ul>
+      {% for t in my_active %}
+        <li>
+          <a class="my-ticket {% if t.id == current_ticket_id %}is-current{% endif %}"
+             {% if t.id == current_ticket_id %}aria-current="page"{% endif %}
+             href="{{ t.url }}">
+            <span class="my-ticket-code">{{ t.code }}</span>
+            <span class="my-ticket-court">{{ t.court }}</span>
+            <span class="pill pill-{{ t.status }}">{{ t.label }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+{% endif %}

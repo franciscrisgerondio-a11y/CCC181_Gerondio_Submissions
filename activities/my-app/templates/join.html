@@ -10,8 +10,8 @@
       Pick a court, get your place, and we'll make sure you know exactly when it's your turn.
     </p>
     <p class="stat mb-0">
-      <span class="stat-number">{{ waiting_total }}</span>
-      <span class="stat-label">{{ 'group' if waiting_total == 1 else 'groups' }} waiting</span>
+      <span class="stat-number" id="hero-waiting-number">{{ waiting_total }}</span>
+      <span class="stat-label" id="hero-waiting-label">{{ 'group waiting' if waiting_total == 1 else 'groups waiting' }}</span>
     </p>
   </div>
 
@@ -47,7 +47,7 @@
             {% if form.get('service_id') == s.id|string %}{% set ns.selected = s %}{% endif %}
           {% endfor %}
 
-          <div class="dropdown court-select">
+          <div class="dropdown court-select" data-url="{{ url_for('courts_json') }}">
             <input type="hidden" name="service_id" value="{{ form.get('service_id', '') }}">
 
             <button type="button" id="court-toggle"

@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime
 
 from flask import (Flask, abort, flash, redirect, render_template, request,
@@ -5,6 +6,10 @@ from flask import (Flask, abort, flash, redirect, render_template, request,
 
 app = Flask(__name__)
 app.secret_key = "dev-only-change-me"  # Week 11 moves this into an environment variable
+
+# Changes every time the server starts, so old browser cookies cannot point
+# at someone else's new ticket. Week 4 replaces this with a real database.
+BOOT_ID = secrets.token_hex(4)
 
 SERVICES = [
     {"id": 1, "name": "Court 1"},
@@ -14,19 +19,13 @@ SERVICES = [
 
 STATUS_LABELS = {"waiting": "Waiting", "called": "Called", "served": "Served",
                  "no-show": "No show", "left": "Left"}
+ACTIVE = ("waiting", "called")
 
 # id is unique forever and is used in URLs.
 # number counts within one court, so every court has its own 001, 002, ...
 # The ticket code shown to people is C<court id>-<number>, for example C1-011.
 # status is one of: waiting, called, served, no-show, left
-TICKETS = [
-    {"id": 1, "number": 11, "name": "Ana", "email": "ana@school.edu",
-     "service_id": 1, "players": 2, "status": "called", "joined_at": "10:20 AM"},
-    {"id": 2, "number": 12, "name": "Carla", "email": "carla@school.edu",
-     "service_id": 1, "players": 4, "status": "waiting", "joined_at": "10:30 AM"},
-    {"id": 3, "number": 1, "name": "Ben", "email": "ben@school.edu",
-     "service_id": 2, "players": 2, "status": "waiting", "joined_at": "10:42 AM"},
-]
+TICKETS = []
 
 # action -> (statuses it is allowed from, new status)
 ACTIONS = {
@@ -74,6 +73,19 @@ def waiting_total():
     return sum(1 for t in TICKETS if t["status"] == "waiting")
 
 
+def my_tickets():
+    """Every ticket this browser has created, oldest first."""
+    found = (find_ticket(i) for i in session.get("my_tickets", []))
+    return [t for t in found if t]
+
+
+def card(t):
+    return {"id": t["id"], "code": ticket_code(t),
+            "court": find_service(t["service_id"])["name"],
+            "status": t["status"], "label": STATUS_LABELS[t["status"]],
+            "url": url_for("ticket", ticket_id=t["id"])}
+
+
 def describe(t):
     """The words My place shows for a ticket in each status."""
     court = find_service(t["service_id"])["name"]
@@ -90,7 +102,7 @@ def describe(t):
             position = f"{ahead} {'group' if ahead == 1 else 'groups'} ahead of you"
     elif status == "called":
         headline = "You're up."
-        subline = f"Head to {court} now."
+        subline = f"{court} is now available."
         position = "It's your turn"
         banner = f"Go to {court} now"
     elif status == "served":
@@ -109,7 +121,23 @@ def describe(t):
     return {"status": status, "status_label": STATUS_LABELS[status],
             "ahead": ahead, "position": position, "headline": headline,
             "subline": subline, "banner": banner,
-            "can_leave": status in ("waiting", "called")}
+            "can_leave": status in ACTIVE}
+
+
+def staff_data():
+    selected = request.args.get("service_id", type=int)
+    if selected not in [s["id"] for s in SERVICES]:
+        selected = None
+
+    all_courts = []
+    for s in SERVICES:
+        queue = sorted((t for t in TICKETS
+                        if t["service_id"] == s["id"] and t["status"] in ACTIVE),
+                       key=lambda t: t["number"])
+        all_courts.append({"service": s, "tickets": queue,
+                           "waiting": sum(1 for t in queue if t["status"] == "waiting")})
+    shown = [c for c in all_courts if selected in (None, c["service"]["id"])]
+    return {"all_courts": all_courts, "shown": shown, "selected": selected}
 
 
 def back_to_dashboard():
@@ -117,13 +145,33 @@ def back_to_dashboard():
                             service_id=request.form.get("filter", type=int)))
 
 
+@app.before_request
+def reset_stale_session():
+    if session.get("boot") != BOOT_ID:
+        session.clear()
+        session["boot"] = BOOT_ID
+
+
 @app.context_processor
 def inject_nav():
-    """Lets the navbar link to the visitor's own ticket after they join."""
-    ticket_id = session.get("ticket_id")
-    if find_ticket(ticket_id) is None:
-        ticket_id = None
-    return {"my_ticket_id": ticket_id}
+    mine = my_tickets()
+    active = [t for t in mine if t["status"] in ACTIVE]
+
+    current = None
+    if request.endpoint == "ticket":
+        current = (request.view_args or {}).get("ticket_id")
+    elif request.endpoint == "my_tickets_partial":
+        current = request.args.get("current", type=int)
+
+    # My place opens the ticket that needs attention most: called, else newest active.
+    target = (next((t for t in active if t["status"] == "called"), None)
+              or (active[-1] if active else None)
+              or (mine[-1] if mine else None))
+
+    return {"my_active": [card(t) for t in active],
+            "current_ticket_id": current,
+            "my_place_id": target["id"] if target else None,
+            "has_tickets": bool(mine)}
 
 
 # ---------- player routes ----------
@@ -162,6 +210,14 @@ def join():
                                waiting_total=waiting_total(),
                                form=form, errors=errors), 400
 
+    # One active ticket per court for each browser. This also stops double taps.
+    existing = next((t for t in my_tickets()
+                     if t["service_id"] == service_id and t["status"] in ACTIVE), None)
+    if existing:
+        flash(f"You already have {ticket_code(existing)} on "
+              f"{find_service(service_id)['name']}. Here is your place.", "warning")
+        return redirect(url_for("ticket", ticket_id=existing["id"]))
+
     # The id never repeats, so every ticket link stays unique.
     new_id = max((t["id"] for t in TICKETS), default=0) + 1
     # The number continues inside this court only. People who left no longer
@@ -175,7 +231,7 @@ def join():
                   "status": "waiting",
                   "joined_at": datetime.now().strftime("%I:%M %p").lstrip("0")}
     TICKETS.append(new_ticket)
-    session["ticket_id"] = new_id
+    session["my_tickets"] = (session.get("my_tickets", []) + [new_id])[-20:]
     flash(f"You joined the queue. Your ticket is {ticket_code(new_ticket)}.", "success")
     return redirect(url_for("ticket", ticket_id=new_id))
 
@@ -187,7 +243,8 @@ def ticket(ticket_id):
         abort(404)
     return render_template("ticket.html", ticket=t,
                            service=find_service(t["service_id"]),
-                           view=describe(t))
+                           view=describe(t),
+                           is_owner=ticket_id in session.get("my_tickets", []))
 
 
 @app.get("/queue/<int:ticket_id>/status.json")
@@ -199,17 +256,31 @@ def ticket_status(ticket_id):
     return describe(t)
 
 
+@app.get("/api/courts")
+def courts_json():
+    return {"courts": services_with_counts(), "waiting_total": waiting_total()}
+
+
+@app.get("/partials/my-tickets")
+def my_tickets_partial():
+    return render_template("_my_tickets.html")
+
+
 @app.post("/queue/<int:ticket_id>/leave")
 def leave(ticket_id):
     t = find_ticket(ticket_id)
     if t is None:
         abort(404)
-    if t["status"] not in ("waiting", "called"):
+    if ticket_id not in session.get("my_tickets", []):
+        abort(403)
+    if t["status"] not in ACTIVE:
         return redirect(url_for("ticket", ticket_id=ticket_id))
     t["status"] = "left"
-    if session.get("ticket_id") == ticket_id:
-        session.pop("ticket_id")
-    flash("You left the queue.", "info")
+    flash(f"You left the queue. {ticket_code(t)} is released.", "info")
+
+    others = [x for x in my_tickets() if x["status"] in ACTIVE]
+    if others:
+        return redirect(url_for("ticket", ticket_id=others[-1]["id"]))
     return redirect(url_for("index"))
 
 
@@ -217,21 +288,12 @@ def leave(ticket_id):
 
 @app.get("/staff")
 def staff_dashboard():
-    selected = request.args.get("service_id", type=int)
-    if selected not in [s["id"] for s in SERVICES]:
-        selected = None
+    return render_template("staff.html", services=SERVICES, **staff_data())
 
-    all_courts = []
-    for s in SERVICES:
-        queue = sorted((t for t in TICKETS
-                        if t["service_id"] == s["id"]
-                        and t["status"] in ("waiting", "called")),
-                       key=lambda t: t["number"])
-        all_courts.append({"service": s, "tickets": queue,
-                           "waiting": sum(1 for t in queue if t["status"] == "waiting")})
-    shown = [c for c in all_courts if selected in (None, c["service"]["id"])]
-    return render_template("staff.html", all_courts=all_courts, shown=shown,
-                           services=SERVICES, selected=selected)
+
+@app.get("/staff/live")
+def staff_live():
+    return render_template("_staff_live.html", **staff_data())
 
 
 @app.post("/staff/tickets/<int:ticket_id>/<action>")

@@ -50,7 +50,7 @@ body {
 }
 
 .pill-nav .nav-link {
-  padding: 0.5rem 1.15rem;
+  padding: 0.65rem 1.15rem;
   border-radius: 999px;
   color: var(--muted);
   font-weight: 700;
@@ -59,14 +59,6 @@ body {
 .pill-nav .nav-link:hover { color: var(--ink); }
 .pill-nav .nav-link.active { background: var(--ink); color: #fff; }
 .pill-nav .nav-link.disabled { opacity: 0.6; }
-
-.open-badge {
-  align-items: center;
-  gap: 0.5rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
 
 .dot {
   display: inline-block;
@@ -92,13 +84,6 @@ body {
 }
 
 label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink); }
-
-.eyebrow-line {
-  display: inline-block;
-  width: 36px;
-  height: 2px;
-  background: var(--green);
-}
 
 .display-title {
   font-size: clamp(2.7rem, 7vw, 5rem);
@@ -153,6 +138,8 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   box-shadow: 0 0 0 0.2rem rgba(20, 102, 80, 0.2);
 }
 
+.invalid-feedback { color: #B02A37; }
+
 .court-index { font-family: "JetBrains Mono", monospace; font-size: 0.85rem; color: var(--green); }
 .court-name { font-weight: 800; }
 .court-wait { font-size: 0.85rem; color: var(--muted); }
@@ -174,7 +161,6 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 }
 
 .court-toggle.is-invalid { border-color: var(--bs-danger); }
-.court-toggle:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
 
 .court-current { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
 .court-current .court-wait { margin-left: auto; }
@@ -236,7 +222,6 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 
 .btn-size:hover { border-color: var(--ink); }
 .btn-check:checked + .btn-size { background: var(--ink); border-color: var(--ink); color: #fff; }
-.btn-check:focus-visible + .btn-size { outline: 3px solid var(--green); outline-offset: 2px; }
 
 /* ---------- buttons ---------- */
 .btn { border-radius: 14px; font-weight: 700; }
@@ -286,6 +271,58 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   color: var(--ink);
 }
 
+/* ---------- your tickets strip and called alert (every page) ---------- */
+.called-alert-wrap { margin-bottom: 1rem; }
+
+.called-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: var(--lime-soft);
+  border: 1px solid #C9E59A;
+  border-left: 6px solid var(--green);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.called-alert:hover { background: #DDF3B8; color: var(--ink); }
+
+.called-alert-cta { text-decoration: underline; white-space: nowrap; }
+
+.my-tickets { margin-bottom: 1.5rem; }
+
+.my-tickets ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.my-ticket {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.my-ticket:hover { border-color: var(--ink); color: var(--ink); }
+.my-ticket.is-current { background: #fff; border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+
+.my-ticket-code { font-family: "JetBrains Mono", monospace; font-weight: 500; }
+.my-ticket-court { color: var(--muted); font-size: 0.9rem; }
+
 /* ---------- My place ---------- */
 .ticket-number {
   font-size: clamp(3.4rem, 12vw, 5.5rem);
@@ -326,13 +363,18 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
 .called-banner {
   margin-bottom: 1.5rem;
   padding: 1rem 1.25rem;
-  border-radius: 16px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 800;
-  text-align: center;
+  border-radius: 12px;
+  background: var(--lime-soft);
+  border: 1px solid #C9E59A;
+  border-left: 6px solid var(--green);
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 700;
+  text-align: left;
 }
+
+.called-alert > span:first-child { font-style: italic; }
 
 .called-banner[hidden] { display: none; }
 
@@ -434,18 +476,18 @@ label.eyebrow, legend.eyebrow, span.eyebrow { display: block; color: var(--ink);
   border-radius: 50%;
 }
 
-/* ---------- accessibility fixes (Part 9) ---------- */
 .btn:focus-visible,
 .nav-link:focus-visible,
 .navbar-toggler:focus-visible,
 .btn-size:focus-visible,
+.court-toggle:focus-visible,
+.called-alert:focus-visible,
+.my-ticket:focus-visible,
 a:focus-visible {
   outline: 3px solid var(--green);
   outline-offset: 2px;
 }
 
+.btn-check:focus-visible + .btn-size { outline: 3px solid var(--green); outline-offset: 2px; }
 .dropdown-item:focus-visible { outline: 3px solid var(--green); outline-offset: -3px; }
-
-.pill-nav .nav-link { padding-top: 0.65rem; padding-bottom: 0.65rem; }
 .navbar-toggler { min-width: 44px; min-height: 44px; }
-.invalid-feedback { color: #B02A37; }

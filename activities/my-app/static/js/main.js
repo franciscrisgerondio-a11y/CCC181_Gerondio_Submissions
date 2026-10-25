@@ -1,4 +1,41 @@
-// 8a. Stop double joining: disable the button once the form is submitted.
+const POLL_MS = 5000;
+
+// Swap in new HTML only when it changed, and keep keyboard focus on the same button.
+function swapKeepingFocus(container, html) {
+  if (container.innerHTML.trim() === html.trim()) return;
+  const active = document.activeElement;
+  const key = active && container.contains(active) ? active.dataset.key : null;
+  container.innerHTML = html;
+  if (key) {
+    const same = container.querySelector(`[data-key="${key}"]`);
+    if (same && !same.disabled) same.focus();
+  }
+}
+
+// Ask the server for a fresh piece of HTML every few seconds and swap it in.
+function pollFragment(container) {
+  const run = async () => {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(container.dataset.url, { headers: { "X-Requested-With": "fetch" } });
+      if (res.ok) swapKeepingFocus(container, await res.text());
+    } catch (err) {
+      console.warn("Could not refresh", err);
+    }
+  };
+  setInterval(run, POLL_MS);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) run(); });
+}
+
+// Your tickets strip and the "you are called" alert, on every page.
+const myTickets = document.getElementById("my-tickets-live");
+if (myTickets && myTickets.dataset.poll === "true") pollFragment(myTickets);
+
+// Staff dashboard stays live as players join, leave and get called.
+const staffLive = document.getElementById("staff-live");
+if (staffLive) pollFragment(staffLive);
+
+// Stop double joining: disable the button once the form is submitted.
 const joinForm = document.getElementById("join-form");
 if (joinForm) {
   joinForm.addEventListener("submit", () => {
@@ -17,13 +54,15 @@ if (joinForm) {
   });
 }
 
-// Court dropdown on the join form: put the chosen court into the hidden field and the toggle label.
+// Court dropdown on the join form.
 function el(tag, className, text) {
   const node = document.createElement(tag);
   node.className = className;
   node.textContent = text;
   return node;
 }
+
+const waitText = (n) => `${n} ${n === 1 ? "group" : "groups"} waiting`;
 
 document.querySelectorAll(".court-select").forEach((root) => {
   const input = root.querySelector("input[type=hidden]");
@@ -43,11 +82,36 @@ document.querySelectorAll(".court-select").forEach((root) => {
         el("span", "court-wait", item.dataset.wait)
       );
       toggle.classList.remove("is-invalid");
+      toggle.focus();
     });
   });
-});
 
-// Staff court filter: submit as soon as a court is chosen.
-document.querySelectorAll("[data-autosubmit]").forEach((select) => {
-  select.addEventListener("change", () => select.form.submit());
+  // Keep the waiting counts on the join page live.
+  const refreshCourts = async () => {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(root.dataset.url);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      data.courts.forEach((c) => {
+        const item = root.querySelector(`.court-item[data-value="${c.id}"]`);
+        if (!item) return;
+        item.dataset.wait = waitText(c.waiting);
+        item.querySelector(".court-wait").textContent = waitText(c.waiting);
+        if (item.classList.contains("active")) {
+          const shown = current.querySelector(".court-wait");
+          if (shown) shown.textContent = waitText(c.waiting);
+        }
+      });
+
+      const number = document.getElementById("hero-waiting-number");
+      const label = document.getElementById("hero-waiting-label");
+      if (number) number.textContent = data.waiting_total;
+      if (label) label.textContent = data.waiting_total === 1 ? "group waiting" : "groups waiting";
+    } catch (err) {
+      console.warn("Could not refresh courts", err);
+    }
+  };
+  setInterval(refreshCourts, POLL_MS);
 });

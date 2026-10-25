@@ -40,10 +40,10 @@
                  href="{{ url_for('join_form') }}">Join</a>
             </li>
             <li class="nav-item">
-              {% if my_ticket_id %}
+              {% if my_place_id %}
                 <a class="nav-link {% if request.endpoint == 'ticket' %}active{% endif %}"
                    {% if request.endpoint == 'ticket' %}aria-current="page"{% endif %}
-                   href="{{ url_for('ticket', ticket_id=my_ticket_id) }}">My place</a>
+                   href="{{ url_for('ticket', ticket_id=my_place_id) }}">My place</a>
               {% else %}
                 <span class="nav-link disabled" aria-disabled="true">My place</span>
               {% endif %}
@@ -54,9 +54,6 @@
                  href="{{ url_for('staff_dashboard') }}">Staff</a>
             </li>
           </ul>
-          <span class="open-badge d-none d-md-inline-flex">
-            <span class="dot" aria-hidden="true"></span>Open play
-          </span>
         </div>
       </div>
     </nav>
@@ -71,6 +68,12 @@
         </div>
       {% endfor %}
     {% endwith %}
+
+    <div id="my-tickets-live" aria-live="polite"
+         data-url="{{ url_for('my_tickets_partial', current=current_ticket_id) }}"
+         data-poll="{{ 'true' if has_tickets else 'false' }}">
+      {% include "_my_tickets.html" %}
+    </div>
 
     {% block content %}{% endblock %}
   </main>

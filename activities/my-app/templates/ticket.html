@@ -5,7 +5,7 @@
 <div class="row g-4 g-lg-5 align-items-center">
 
   <div class="col-12 col-lg-6">
-    <p class="eyebrow mb-3"><span class="eyebrow-line" aria-hidden="true"></span>Your queue status</p>
+    <p class="eyebrow mb-3">Your queue status</p>
     <h1 class="display-title" id="headline">{{ view.headline }}</h1>
     <p class="lead-muted mt-4 mb-0" id="subline">{{ view.subline }}</p>
   </div>
@@ -47,10 +47,12 @@
         This page updates by itself. Status is always shown in words, not only color.
       </p>
 
-      <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.id) }}"
-            {% if not view.can_leave %}hidden{% endif %}>
-        <button type="submit" class="btn btn-ghost w-100">Leave the queue</button>
-      </form>
+      {% if is_owner %}
+        <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.id) }}"
+              {% if not view.can_leave %}hidden{% endif %}>
+          <button type="submit" class="btn btn-ink w-100">Leave the queue</button>
+        </form>
+      {% endif %}
     </section>
   </div>
 
@@ -64,6 +66,7 @@
   let timer = null;
 
   async function refreshStatus() {
+    if (document.hidden) return;
     try {
       const res = await fetch(statusUrl, { headers: { "Accept": "application/json" } });
       if (!res.ok) return;
@@ -81,7 +84,8 @@
       banner.textContent = data.banner;
       banner.hidden = !data.banner;
 
-      document.getElementById("leave-form").hidden = !data.can_leave;
+      const leaveForm = document.getElementById("leave-form");
+      if (leaveForm) leaveForm.hidden = !data.can_leave;
 
       // Nothing else can change once the ticket is finished, so stop asking.
       if (finalStatuses.includes(data.status) && timer) {
@@ -94,12 +98,10 @@
   }
 
   if (!finalStatuses.includes("{{ view.status }}")) {
-    timer = setInterval(refreshStatus, 10000);
+    timer = setInterval(refreshStatus, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && timer) refreshStatus();
+    });
   }
-
-  // Catch up right away when the player comes back to this tab.
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && timer) refreshStatus();
-  });
 </script>
 {% endblock %}
