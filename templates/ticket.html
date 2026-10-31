@@ -18,11 +18,11 @@
 
       <div class="d-flex justify-content-between align-items-center mb-1">
         <p class="eyebrow mb-0">Your ticket</p>
-        <p class="eyebrow mb-0">Joined {{ ticket.joined_at }}</p>
+        <p class="eyebrow mb-0">Joined {{ ticket.created_at|local }}</p>
       </div>
 
       <p class="ticket-number mb-3">
-        <span class="visually-hidden">Ticket </span><span class="ticket-prefix">C{{ ticket.service_id }}-</span>{{ '%03d'|format(ticket.number) }}
+        <span class="visually-hidden">Ticket </span><span class="ticket-prefix">C{{ ticket.court_id }}-</span>{{ '%03d'|format(ticket.number) }}
       </p>
 
       <div class="court-chip mb-4">
