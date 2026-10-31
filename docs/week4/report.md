@@ -8,7 +8,7 @@
 - **Student ID:** 2024-0861
 - **Section:** CS3B
 - **Date:** October 31, 2026
-- **Pull request:** 
+- **Pull request:** https://github.com/franciscrisgerondio-a11y/CCC181_Gerondio_Submissions/pull/5
 - **Database:** PostgreSQL 17 in Docker (no local PostgreSQL fallback was used)
 
 ## 2. Requirements
