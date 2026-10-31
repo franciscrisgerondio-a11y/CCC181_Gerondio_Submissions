@@ -17,7 +17,8 @@ I wrote 14 functional requirements (4 marked ★: FR-06, FR-07, FR-08, FR-13) an
 
 **MVP:** FR-01 to FR-05, FR-07, FR-08, FR-10, FR-11, NFR-01, NFR-02, NFR-04 and NFR-05. It is the smallest version that replaces the paddle stack, because players can join and see a trustworthy place in line, and the organizer can move the line forward on a database that never forgets a ticket.
 
-**Check with a real person:** [FILL IN: their role, what they said, and what you changed in the list. This has to come from a real conversation.]
+**Check with a real person:** A real person tested both roles, the player and the staff, and said both are good and work perfectly. The only issue they raised was that the staff tab is not separated from the players tab. I did not change anything in the list because that fix is out of this week’s scope, so it is logged as a follow up for a later iteration.
+
 
 ## 3. ERD
 
