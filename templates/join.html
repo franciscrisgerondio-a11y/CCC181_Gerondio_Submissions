@@ -30,7 +30,7 @@
         <div class="mb-4">
           <label for="name" class="eyebrow d-block mb-2">Your name</label>
           <input id="name" name="name" type="text" autocomplete="name" required
-                 maxlength="60" placeholder="Enter your name"
+                 maxlength="50" placeholder="Enter your name"
                  class="form-control form-control-lg {% if errors.name %}is-invalid{% endif %}"
                  value="{{ form.get('name', '') }}"
                  {% if errors.name %}aria-describedby="name-error"{% endif %}>
