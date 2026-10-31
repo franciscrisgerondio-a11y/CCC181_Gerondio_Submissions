@@ -1,7 +1,10 @@
+import os
 import secrets
 from datetime import datetime
 
-import os
+
+
+from models import Court, db
 
 from dotenv import load_dotenv
 from flask_migrate import Migrate
@@ -337,6 +340,15 @@ def staff_call_next(service_id):
         flash(f"Called {ticket_code(queue[0])} ({queue[0]['name']}) on {court}.", "success")
     return back_to_dashboard()
 
+@app.cli.command("seed")
+def seed():
+    """Add the starting courts if they are not there yet."""
+    for name in ["Court 1", "Court 2", "Court 3"]:
+        exists = db.session.scalar(db.select(Court).filter_by(name=name))
+        if exists is None:
+            db.session.add(Court(name=name))
+    db.session.commit()
+    print("Courts are ready.")
 
 if __name__ == "__main__":
     app.run(debug=True)

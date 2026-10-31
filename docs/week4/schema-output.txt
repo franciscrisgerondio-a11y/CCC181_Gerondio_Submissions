@@ -1,0 +1,50 @@
+﻿                                   Table "public.courts"
+ Column |         Type          | Collation | Nullable |              Default               
+--------+-----------------------+-----------+----------+------------------------------------
+ id     | integer               |           | not null | nextval('courts_id_seq'::regclass)
+ name   | character varying(40) |           | not null | 
+Indexes:
+    "courts_pkey" PRIMARY KEY, btree (id)
+    "courts_name_key" UNIQUE CONSTRAINT, btree (name)
+Check constraints:
+    "ck_courts_name_not_blank" CHECK (length(TRIM(BOTH FROM name)) > 0)
+Referenced by:
+    TABLE "tickets" CONSTRAINT "tickets_court_id_fkey" FOREIGN KEY (court_id) REFERENCES courts(id) ON DELETE RESTRICT
+
+                            Table "public.visitors"
+ Column |  Type   | Collation | Nullable |               Default                
+--------+---------+-----------+----------+--------------------------------------
+ id     | integer |           | not null | nextval('visitors_id_seq'::regclass)
+ token  | uuid    |           | not null | gen_random_uuid()
+Indexes:
+    "visitors_pkey" PRIMARY KEY, btree (id)
+    "visitors_token_key" UNIQUE CONSTRAINT, btree (token)
+Referenced by:
+    TABLE "tickets" CONSTRAINT "tickets_visitor_id_fkey" FOREIGN KEY (visitor_id) REFERENCES visitors(id) ON DELETE RESTRICT
+
+                                       Table "public.tickets"
+   Column   |           Type           | Collation | Nullable |               Default               
+------------+--------------------------+-----------+----------+-------------------------------------
+ id         | integer                  |           | not null | nextval('tickets_id_seq'::regclass)
+ court_id   | integer                  |           | not null | 
+ visitor_id | integer                  |           | not null | 
+ number     | integer                  |           | not null | 
+ group_name | character varying(50)    |           | not null | 
+ players    | smallint                 |           | not null | 
+ status     | character varying(20)    |           | not null | 'waiting'::character varying
+ created_at | timestamp with time zone |           | not null | now()
+ called_at  | timestamp with time zone |           |          | 
+ closed_at  | timestamp with time zone |           |          | 
+Indexes:
+    "tickets_pkey" PRIMARY KEY, btree (id)
+    "uq_tickets_court_number" UNIQUE CONSTRAINT, btree (court_id, number)
+    "uq_tickets_one_active_per_court" UNIQUE, btree (visitor_id, court_id) WHERE status::text = ANY (ARRAY['waiting'::character varying, 'called'::character varying]::text[])
+Check constraints:
+    "ck_tickets_group_name_not_blank" CHECK (length(TRIM(BOTH FROM group_name)) > 0)
+    "ck_tickets_number_positive" CHECK (number > 0)
+    "ck_tickets_players" CHECK (players = ANY (ARRAY[2, 4]))
+    "ck_tickets_status" CHECK (status::text = ANY (ARRAY['waiting'::character varying, 'called'::character varying, 'served'::character varying, 'no-show'::character varying, 'left'::character varying]::text[]))
+Foreign-key constraints:
+    "tickets_court_id_fkey" FOREIGN KEY (court_id) REFERENCES courts(id) ON DELETE RESTRICT
+    "tickets_visitor_id_fkey" FOREIGN KEY (visitor_id) REFERENCES visitors(id) ON DELETE RESTRICT
+
