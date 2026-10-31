@@ -1,11 +1,24 @@
 import secrets
 from datetime import datetime
 
+import os
+
+from dotenv import load_dotenv
+from flask_migrate import Migrate
+
+from models import db
 from flask import (Flask, abort, flash, redirect, render_template, request,
                    session, url_for)
 
 app = Flask(__name__)
 app.secret_key = "dev-only-change-me"  # Week 11 moves this into an environment variable
+
+load_dotenv()
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
+app.config["SQLALCHEMY_ECHO"] = os.environ.get("SQLALCHEMY_ECHO") == "1"
+
+db.init_app(app)
+migrate = Migrate(app, db)
 
 # Changes every time the server starts, so old browser cookies cannot point
 # at someone else's new ticket. Week 4 replaces this with a real database.
