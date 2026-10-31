@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import (CheckConstraint, DateTime, ForeignKey, Index, SmallInteger,
-                        String, UniqueConstraint, func, text)
+                        String, UniqueConstraint, func, text, true)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +15,7 @@ class Court(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(40), unique=True)
+    active: Mapped[bool] = mapped_column(default=True, server_default=true())
 
     tickets: Mapped[list["Ticket"]] = relationship(back_populates="court")
 

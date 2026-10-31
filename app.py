@@ -61,14 +61,19 @@ def all_courts():
     return db.session.scalars(db.select(Court).order_by(Court.id)).all()
 
 
+def active_courts():
+    stmt = db.select(Court).filter_by(active=True).order_by(Court.id)
+    return db.session.scalars(stmt).all()
+
+
 def courts_with_counts():
-    """Each court with how many groups are waiting, counted by the database."""
+    """Each active court with how many groups are waiting, counted by the database."""
     stmt = (db.select(Ticket.court_id, func.count())
             .where(Ticket.status == "waiting")
             .group_by(Ticket.court_id))
     counts = dict(db.session.execute(stmt).all())
     return [{"id": c.id, "name": c.name, "waiting": counts.get(c.id, 0)}
-            for c in all_courts()]
+            for c in active_courts()]
 
 
 def waiting_total():
@@ -222,7 +227,7 @@ def join():
         errors["name"] = "Enter your name."
     elif len(name) > 50:
         errors["name"] = "Use 50 characters or fewer."
-    if court is None:
+    if court is None or not court.active:
         errors["service_id"] = "Choose a court."
     if players not in (2, 4):
         errors["players"] = "Choose 2 or 4 players."
@@ -376,6 +381,70 @@ def staff_call_next(service_id):
         db.session.commit()
         flash(f"Called {ticket_code(t)} ({t.group_name}) on {court.name}.", "success")
     return back_to_dashboard()
+
+
+# ---------- manage courts (staff) ----------
+
+def clean_court_name(raw):
+    """Return (name, error). The limit matches the varchar(40) column."""
+    name = (raw or "").strip()
+    if not name or len(name) > 40:
+        return None, "Enter a court name of 1 to 40 characters."
+    return name, None
+
+
+@app.get("/staff/services")
+def services_list():
+    return render_template("services.html", courts=all_courts())
+
+
+@app.post("/staff/services")
+def service_create():
+    name, error = clean_court_name(request.form.get("name"))
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("services_list"))
+    db.session.add(Court(name=name))
+    try:
+        db.session.commit()
+        flash(f"Court \u201c{name}\u201d added.", "success")
+    except IntegrityError:
+        db.session.rollback()
+        flash(f"A court named \u201c{name}\u201d already exists.", "danger")
+    return redirect(url_for("services_list"))
+
+
+@app.post("/staff/services/<int:service_id>")
+def service_edit(service_id):
+    court = db.get_or_404(Court, service_id)
+    name, error = clean_court_name(request.form.get("name"))
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("services_list"))
+    court.name = name
+    # A checkbox that is not ticked is not sent at all.
+    court.active = request.form.get("active") == "on"
+    try:
+        db.session.commit()
+        flash(f"Court \u201c{name}\u201d updated.", "success")
+    except IntegrityError:
+        db.session.rollback()
+        flash(f"A court named \u201c{name}\u201d already exists.", "danger")
+    return redirect(url_for("services_list"))
+
+
+@app.post("/staff/services/<int:service_id>/delete")
+def service_delete(service_id):
+    court = db.get_or_404(Court, service_id)
+    if court.tickets:
+        flash(f"\u201c{court.name}\u201d has tickets, so it cannot be deleted. "
+              f"Turn it off instead.", "danger")
+        return redirect(url_for("services_list"))
+    name = court.name
+    db.session.delete(court)
+    db.session.commit()
+    flash(f"Court \u201c{name}\u201d deleted.", "warning")
+    return redirect(url_for("services_list"))
 
 
 @app.cli.command("seed")
