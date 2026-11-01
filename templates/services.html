@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Manage courts · PivotPB{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <p class="eyebrow mb-2"><span class="eyebrow-line" aria-hidden="true"></span>Organizer controls</p>
+  <h1 class="display-title display-title-sm">Manage courts</h1>
+  <p class="lead-muted mb-0 mt-2">Add a court, rename it, or switch it off. A court that is off no longer appears on the join form.</p>
+  <a class="btn btn-ghost mt-3" href="{{ url_for('staff_dashboard') }}">Back to dashboard</a>
+</div>
+
+<section class="card-pb p-4 mb-4" aria-labelledby="add-court-heading">
+  <h2 id="add-court-heading" class="card-title-pb mb-3">Add a court</h2>
+  <form method="post" action="{{ url_for('service_create') }}" class="d-flex flex-wrap gap-2">
+    <label for="new-court-name" class="visually-hidden">Court name</label>
+    <input id="new-court-name" name="name" type="text" required maxlength="40"
+           class="form-control form-control-lg w-auto flex-grow-1" placeholder="For example, Court 4">
+    <button type="submit" class="btn btn-primary">Add court</button>
+  </form>
+</section>
+
+<section class="card-pb p-4" aria-labelledby="courts-heading">
+  <h2 id="courts-heading" class="card-title-pb mb-3">All courts</h2>
+  <div class="table-responsive">
+    <table class="table queue-table align-middle mb-0">
+      <caption class="visually-hidden">Courts and their tickets</caption>
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Status</th>
+          <th scope="col">Tickets(All time)</th>
+          <th scope="col" class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in courts %}
+          <tr>
+            <td>
+              <form method="post" id="edit-{{ c.id }}" action="{{ url_for('service_edit', service_id=c.id) }}">
+                <label for="name-{{ c.id }}" class="visually-hidden">Name of court {{ c.id }}</label>
+                <input id="name-{{ c.id }}" name="name" type="text" required maxlength="40"
+                       class="form-control" value="{{ c.name }}">
+              </form>
+            </td>
+            <td>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="active" id="active-{{ c.id }}"
+                       form="edit-{{ c.id }}" {% if c.active %}checked{% endif %}>
+                <label class="form-check-label" for="active-{{ c.id }}">Active</label>
+              </div>
+            </td>
+            <td>{{ c.tickets|length }}</td>
+            <td class="text-end text-nowrap">
+              <button type="submit" form="edit-{{ c.id }}" class="btn btn-ink">Save</button>
+              <form method="post" class="d-inline"
+                    action="{{ url_for('service_delete', service_id=c.id) }}"
+                    data-confirm="Delete {{ c.name }}? This cannot be undone.">
+                <button type="submit" class="btn btn-ghost" aria-label="Delete {{ c.name }}">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

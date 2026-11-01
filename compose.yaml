@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:17
+    container_name: pivotpb-db
+    environment:
+      POSTGRES_USER: pivotpb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pivotpb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pivotpb -d pivotpb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

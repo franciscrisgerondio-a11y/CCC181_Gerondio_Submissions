@@ -115,3 +115,9 @@ document.querySelectorAll(".court-select").forEach((root) => {
   };
   setInterval(refreshCourts, POLL_MS);
 });
+
+
+document.addEventListener("submit", (event) => {
+  const message = event.target.dataset && event.target.dataset.confirm;
+  if (message && !confirm(message)) event.preventDefault();
+});

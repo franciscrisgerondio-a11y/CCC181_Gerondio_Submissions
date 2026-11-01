@@ -20,7 +20,7 @@ Players at a pickleball court queue by stacking their paddles in a pile beside t
 
 ### Scenario
 
-Jericho arrives at the courts at 4:30 with two friends and sees all three courts in use. Normally he would lay his paddle on a stack and hope nobody disturbs it. Instead he opens PivotPB on his phone, joins Court 2 as a group of four, and gets ticket number 3. He sees two groups ahead, so he sits on the bench to rest. Ten minutes later his phone shows that he is next, then called, and he walks to Court 2 with his friends. If his plans change, he taps Leave the queue so he does not hold up the line.
+Jerich arrives at the courts at 4:30 with two friends and sees all three courts in use. Normally he would lay his paddle on a stack and hope nobody disturbs it. Instead he opens PivotPB on his phone, joins Court 2 as a group of four, and gets ticket number 3. He sees two groups ahead, so he sits on the bench to rest. Ten minutes later his phone shows that he is next, then called, and he walks to Court 2 with his friends. If his plans change, he taps Leave the queue so he does not hold up the line.
 
 ### Top tasks in the app
 
@@ -29,6 +29,8 @@ Jericho arrives at the courts at 4:30 with two friends and sees all three courts
 | Join the queue for a court, like adding a paddle to the stack | Join | FR-01 |
 | Check how many groups are ahead | My place | FR-02 |
 | Leave the queue | My place | FR-03 |
+| Choose a group of 2 or 4 players when joining (★) | Join | FR-07 |
+| See my court's own ticket code, such as C2-003 (★) | My place | FR-08 |
 
 ### What this means for my interface
 
@@ -62,6 +64,7 @@ Lara sets up at the side of the courts at 4 pm and opens the PivotPB staff dashb
 | See the waiting list in order for each court, like a readable stack | Staff dashboard | FR-04 |
 | Call, serve, or mark a group as no show | Staff dashboard | FR-05 |
 | See how many groups are waiting per court (★) | Staff dashboard | FR-06 |
+| Switch a court off when it is closed, or add a new one | Manage courts | FR-11 |
 
 ### What this means for my interface
 
